@@ -1,0 +1,131 @@
+services:
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "${ZK_PORT}:${ZK_PORT}"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: kafka
+    ports:
+      - "${KAFKA_PORT}:${KAFKA_PORT}"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:${ZK_PORT}
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:${KAFKA_PORT}
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:${KAFKA_PORT}
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: redpanda-console
+    ports:
+      - "${KAFKA_UI_PORT}:${KAFKA_UI_PORT}"
+    environment:
+      - KAFKA_BROKERS=${KAFKA_BROKER}
+    depends_on:
+      - kafka
+
+  crowdq-postgres:
+    image: postgres:15
+    container_name: crowdq-postgres
+    ports:
+      - "${CROWDQ_DB_PORT}:${CROWDQ_DB_PORT}"
+    environment:
+      - POSTGRES_DB=${CROWDQ_DB_NAME}
+      - POSTGRES_USER=${CROWDQ_DB_USER}
+      - POSTGRES_PASSWORD=${CROWDQ_DB_PASSWORD}
+    volumes:
+      - crowdq_postgres_data:/var/lib/postgresql/data
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - "${PGADMIN_PORT}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    depends_on:
+      - crowdq-postgres
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+  
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    ports:
+      - "${REDISINSIGHT_PORT}:${REDISINSIGHT_PORT}"
+    depends_on:
+      - redis
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
+    networks:
+      - backend
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "${GRAFANA_PORT}:${GRAFANA_PORT}"
+    volumes:
+      - grafana_data:/var/lib/grafana
+  
+  sonar-postgres:
+    image: postgres:13
+    container_name: sonar-postgres
+    environment:
+      - POSTGRES_DB=${SONARQUBE_DB_NAME}
+      - POSTGRES_USER=${SONARQUBE_DB_USER}
+      - POSTGRES_PASSWORD=${SONARQUBE_DB_PASSWORD}
+    volumes:
+      - sonar_postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    depends_on:
+      - sonar-postgres
+    ports:
+      - "${SONARQUBE_PORT}:${SONARQUBE_PORT}"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonar-postgres:5432/${SONARQUBE_DB_NAME}
+      - SONAR_JDBC_USERNAME=${SONARQUBE_DB_USER}
+      - SONAR_JDBC_PASSWORD=${SONARQUBE_DB_PASSWORD}
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    restart: always
+
+
+
+volumes:
+  crowdq_postgres_data:
+  grafana_data:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
+  sonar_postgres_data:
+
+networks:
+  backend:
