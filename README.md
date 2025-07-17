@@ -2,8 +2,6 @@
 
 This repository contains the Docker-based infrastructure stack for the **CrowdQ** microservices showcase project. It provides databases, message brokers, observability tools, caching, and developer utilities to support local development and testing.
 
----
-
 ## 🗂️ Folder Structure
 
 ```
@@ -14,8 +12,6 @@ infra/
 │   └── prometheus.yml       # Prometheus configuration file
 └── README.md                # This file
 ```
-
----
 
 ## 🧩 Services Overview
 
@@ -32,8 +28,6 @@ infra/
 | **Grafana**          | 3000 | Dashboard and visualizations                    |
 | **SonarQube**        | 9000 | Static code analysis                            |
 | **Sonar DB**         | 5433 | PostgreSQL DB dedicated to SonarQube            |
-
----
 
 ## ⚙️ Environment Variables (.env)
 
@@ -90,8 +84,6 @@ SONARQUBE_HOST=sonarqube
 SONARQUBE_PORT=9000
 ```
 
----
-
 ## 🐘 PostgreSQL
 
 Two PostgreSQL services are included:
@@ -101,22 +93,16 @@ Two PostgreSQL services are included:
 
 Access either DB using **pgAdmin** at `http://localhost:5050`.
 
----
-
 ## 🔴 Redis
 
 - Redis runs on `localhost:6379`
 - Use **RedisInsight** (`http://localhost:5540`) for a visual interface.
-
----
 
 ## 🔁 Kafka & Zookeeper
 
 - Zookeeper: Required by Kafka, on port `2181`
 - Kafka: Configured with PLAINTEXT for development
 - Redpanda Console (`http://localhost:8080`) helps browse topics, messages, etc.
-
----
 
 ## 📊 Metrics & Dashboards
 
@@ -125,16 +111,12 @@ Access either DB using **pgAdmin** at `http://localhost:5050`.
 
 Configure Grafana to use Prometheus as a data source.
 
----
-
 ## ✅ Static Code Analysis
 
 - SonarQube runs on `http://localhost:9000`
 - Connects to its own PostgreSQL container (`sonar-postgres`)
 
 Login default user: `admin` / `admin`
-
----
 
 ## 🚀 Usage
 
@@ -154,28 +136,22 @@ docker compose up -d
 - Prometheus: http://localhost:9090
 - SonarQube: http://localhost:9000
 
----
-
 ## 🧼 Cleanup
 
 ```bash
 docker compose down -v
 ```
 
----
-
 ## 📂 Volumes
 
-| Volume Name           | Purpose                        |
-|-----------------------|--------------------------------|
-| `crowdq_postgres_data` | App PostgreSQL persistence     |
-| `sonar_postgres_data`  | SonarQube PostgreSQL data      |
-| `sonarqube_data`       | SonarQube main data dir        |
-| `sonarqube_logs`       | Logs from SonarQube            |
-| `sonarqube_extensions` | Plugins for SonarQube          |
-| `grafana_data`         | Grafana dashboards & settings  |
-
----
+| Volume Name            | Purpose                       |
+|------------------------|-------------------------------|
+| `crowdq_postgres_data` | App PostgreSQL persistence    |
+| `sonar_postgres_data`  | SonarQube PostgreSQL data     |
+| `sonarqube_data`       | SonarQube main data dir       |
+| `sonarqube_logs`       | Logs from SonarQube           |
+| `sonarqube_extensions` | Plugins for SonarQube         |
+| `grafana_data`         | Grafana dashboards & settings |
 
 ## 🤝 Contributing
 
