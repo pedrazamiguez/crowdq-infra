@@ -27,14 +27,14 @@ services:
     image: docker.redpanda.com/redpandadata/console:latest
     container_name: redpanda-console
     ports:
-      - "${KAFKA_UI_PORT}:${KAFKA_UI_PORT}"
+      - "${KAFKA_UI_PORT}:8080"
     environment:
       - KAFKA_BROKERS=${KAFKA_BROKER}
     depends_on:
       - kafka
 
   crowdq-postgres:
-    image: postgres:15
+    image: postgres:17.5
     container_name: crowdq-postgres
     ports:
       - "${CROWDQ_DB_PORT}:${CROWDQ_DB_PORT}"
@@ -89,7 +89,7 @@ services:
       - grafana_data:/var/lib/grafana
   
   sonar-postgres:
-    image: postgres:13
+    image: postgres:17.5
     container_name: sonar-postgres
     environment:
       - POSTGRES_DB=${SONARQUBE_DB_NAME}
@@ -97,7 +97,6 @@ services:
       - POSTGRES_PASSWORD=${SONARQUBE_DB_PASSWORD}
     volumes:
       - sonar_postgres_data:/var/lib/postgresql/data
-    restart: always
 
   sonarqube:
     image: sonarqube:latest
@@ -115,9 +114,38 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
-    restart: always
+  
+  keycloak-postgres:
+    image: postgres:17.5
+    container_name: keycloak-postgres
+    environment:
+      - POSTGRES_DB=${KEYCLOAK_DB_NAME}
+      - POSTGRES_USER=${KEYCLOAK_DB_USER}
+      - POSTGRES_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
 
-
+  auth-service:
+    image: quay.io/keycloak/keycloak:26.3.1
+    container_name: auth-service
+    depends_on:
+      - keycloak-postgres
+    ports:
+      - "${KEYCLOAK_PORT}:8443"
+    environment:
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak-postgres:5432/${KEYCLOAK_DB_NAME}
+      - KC_DB_USERNAME=${KEYCLOAK_DB_USER}
+      - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - KC_HOSTNAME_STRICT=false
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_HTTPS_CERTIFICATE_FILE=/opt/keycloak/conf/server.crt.pem
+      - KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/conf/server.key.pem
+    volumes:
+      - $PWD/keycloak/server.crt.pem:/opt/keycloak/conf/server.crt.pem
+      - $PWD/keycloak/server.key.pem:/opt/keycloak/conf/server.key.pem
+    command: start
 
 volumes:
   crowdq_postgres_data:
@@ -126,6 +154,7 @@ volumes:
   sonarqube_logs:
   sonarqube_extensions:
   sonar_postgres_data:
+  keycloak_postgres_data:
 
 networks:
   backend:
