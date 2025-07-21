@@ -8,15 +8,16 @@ This repository contains the Docker-based infrastructure stack for the **CrowdQ*
 crowdq-infra/
 ├── docker-compose.yml        # Main Docker Compose file
 ├── .env                      # Environment variable configuration
+├── .env.example              # Example env file – copy or rename to .env and update values as needed
 ├── prometheus/
 │   └── prometheus.yml        # Prometheus configuration
 ├── keycloak/
 │   ├── server.crt.pem        # TLS certificate for Keycloak
 │   └── server.key.pem        # TLS key for Keycloak
 ├── grafana/                  # Optional Grafana provisioning
-├── kafka/                    # Optional Kafka configs
-├── postgres/                 # Optional PostgreSQL configs
-├── redis/                    # Optional Redis configs
+├── kafka/                    # Optional Kafka config
+├── postgres/                 # Optional PostgreSQL config
+├── redis/                    # Optional Redis config
 └── README.md                 # This file
 ```
 
@@ -100,7 +101,7 @@ KEYCLOAK_ADMIN_PASSWORD=admin
 
 ## 🔐 Keycloak Setup with TLS
 
-Keycloak is exposed securely using HTTPS with self-signed certificates located in `keycloak/server.crt.pem` and `server.key.pem`.
+Keycloak is exposed securely over HTTPS using self-signed certificates located at `keycloak/server.crt.pem` and `keycloak/server.key.pem`.
 
 To generate new certificates:
 
@@ -111,6 +112,7 @@ openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 \
   -out server.crt.pem \
   -subj "/CN=localhost" \
   -addext "subjectAltName=DNS:localhost"
+
 chmod 755 server.key.pem
 ```
 
@@ -118,7 +120,7 @@ To trust the certificate on the Java KeyStore:
 
 ```bash
 sudo keytool -importcert \
-  -file /path/to/server.crt.pem \
+  -file keycloak/server.crt.pem \
   -alias keycloak \
   -keystore $JAVA_HOME/lib/security/cacerts \
   -storepass changeit \
@@ -126,6 +128,16 @@ sudo keytool -importcert \
 ```
 
 **Important**: A system restart may be required for the certificate changes to take full effect.
+
+**Note**: If needed, you can remove the certificate from the Java KeyStore using:
+
+```bash
+sudo keytool -delete \
+  -alias keycloak \
+  -keystore $JAVA_HOME/lib/security/cacerts \
+  -storepass changeit \
+  -noprompt 
+```
 
 ## 🐘 PostgreSQL
 
