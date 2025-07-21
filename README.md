@@ -125,7 +125,7 @@ sudo keytool -importcert \
   -noprompt
 ```
 
-**Important**: Restart the Operating System.
+**Important**: A system restart may be required for the certificate changes to take full effect.
 
 ## 🐘 PostgreSQL
 
