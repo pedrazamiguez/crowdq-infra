@@ -5,6 +5,8 @@ services:
     container_name: zookeeper
     ports:
       - "${ZK_PORT}:${ZK_PORT}"
+    networks:
+      - backend
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
 
@@ -13,6 +15,8 @@ services:
     container_name: kafka
     ports:
       - "${KAFKA_PORT}:${KAFKA_PORT}"
+    networks:
+      - backend
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:${ZK_PORT}
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:${KAFKA_PORT}
@@ -28,6 +32,8 @@ services:
     container_name: redpanda-console
     ports:
       - "${KAFKA_UI_PORT}:8080"
+    networks:
+      - backend
     environment:
       - KAFKA_BROKERS=${KAFKA_BROKER}
     depends_on:
@@ -38,6 +44,8 @@ services:
     container_name: crowdq-postgres
     ports:
       - "${CROWDQ_DB_PORT}:${CROWDQ_DB_PORT}"
+    networks:
+      - backend
     environment:
       - POSTGRES_DB=${CROWDQ_DB_NAME}
       - POSTGRES_USER=${CROWDQ_DB_USER}
@@ -50,6 +58,8 @@ services:
     container_name: pgadmin
     ports:
       - "${PGADMIN_PORT}:80"
+    networks:
+      - backend
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
@@ -61,12 +71,16 @@ services:
     container_name: redis
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - backend
   
   redisinsight:
     image: redis/redisinsight:latest
     container_name: redisinsight
     ports:
       - "${REDISINSIGHT_PORT}:${REDISINSIGHT_PORT}"
+    networks:
+      - backend
     depends_on:
       - redis
 
@@ -85,12 +99,16 @@ services:
     container_name: grafana
     ports:
       - "${GRAFANA_PORT}:${GRAFANA_PORT}"
+    networks:
+      - backend
     volumes:
       - grafana_data:/var/lib/grafana
   
   sonar-postgres:
     image: postgres:17.5
     container_name: sonar-postgres
+    networks:
+      - backend
     environment:
       - POSTGRES_DB=${SONARQUBE_DB_NAME}
       - POSTGRES_USER=${SONARQUBE_DB_USER}
@@ -101,10 +119,10 @@ services:
   sonarqube:
     image: sonarqube:latest
     container_name: sonarqube
-    depends_on:
-      - sonar-postgres
     ports:
       - "${SONARQUBE_PORT}:${SONARQUBE_PORT}"
+    networks:
+      - backend
     environment:
       - SONAR_JDBC_URL=jdbc:postgresql://sonar-postgres:5432/${SONARQUBE_DB_NAME}
       - SONAR_JDBC_USERNAME=${SONARQUBE_DB_USER}
@@ -114,10 +132,14 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
+    depends_on:
+      - sonar-postgres
   
   keycloak-postgres:
     image: postgres:17.5
     container_name: keycloak-postgres
+    networks:
+      - backend
     environment:
       - POSTGRES_DB=${KEYCLOAK_DB_NAME}
       - POSTGRES_USER=${KEYCLOAK_DB_USER}
@@ -128,10 +150,10 @@ services:
   auth-service:
     image: quay.io/keycloak/keycloak:26.3.1
     container_name: auth-service
-    depends_on:
-      - keycloak-postgres
     ports:
       - "${KEYCLOAK_PORT}:8443"
+    networks:
+      - backend
     environment:
       - KC_DB=postgres
       - KC_DB_URL=jdbc:postgresql://keycloak-postgres:5432/${KEYCLOAK_DB_NAME}
@@ -146,6 +168,8 @@ services:
       - $PWD/keycloak/server.crt.pem:/opt/keycloak/conf/server.crt.pem
       - $PWD/keycloak/server.key.pem:/opt/keycloak/conf/server.key.pem
     command: start
+    depends_on:
+      - keycloak-postgres
 
 volumes:
   crowdq_postgres_data:

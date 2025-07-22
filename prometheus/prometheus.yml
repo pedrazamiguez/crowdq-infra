@@ -7,34 +7,37 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'gateway'
+  - job_name: 'api-gateway'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['api-gateway:8080']
-
-  - job_name: 'auth-service'
-    static_configs:
-      - targets: ['auth-service:8080']
+      - targets: ['api-gateway:8080', 'host.docker.internal:58000']
 
   - job_name: 'user-service'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['user-service:8080']
+      - targets: ['user-service:8080', 'host.docker.internal:59100']
 
   - job_name: 'event-service'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['event-service:8080']
+      - targets: ['event-service:8080', 'host.docker.internal:59200']
 
   - job_name: 'question-service'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['question-service:8080']
+      - targets: ['question-service:8080', 'host.docker.internal:59300']
 
   - job_name: 'moderation-service'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['moderation-service:8080']
+      - targets: ['moderation-service:8080', 'host.docker.internal:59400']
 
   - job_name: 'analytics-service'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['analytics-service:8080']
+      - targets: ['analytics-service:8080', 'host.docker.internal:59500']
 
   - job_name: 'notification-service'
+    metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['notification-service:8080']
+      - targets: ['notification-service:8080', 'host.docker.internal:59600']
