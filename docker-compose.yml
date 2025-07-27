@@ -170,6 +170,43 @@ services:
     command: start
     depends_on:
       - keycloak-postgres
+  
+  # Microservices
+
+  api-gateway:
+    build:
+      context: ../crowdq-api-gateway
+      dockerfile: Dockerfile
+    image: crowdq-api-gateway:0.0.1-SNAPSHOT
+    container_name: api-gateway
+    ports:
+      - "${API_GATEWAY_PORT}:8080"
+    networks:
+      - backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - crowdq-postgres
+      - auth-service
+      - redis
+      - kafka
+  
+  user-service:
+    build:
+      context: ../crowdq-user-service/crowdq-user-service
+      dockerfile: Dockerfile
+    image: crowdq-user-service:0.0.1-SNAPSHOT
+    container_name: user-service
+    networks:
+      - backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - CROWDQ_DB_PORT=${CROWDQ_DB_PORT}
+      - CROWDQ_DB_NAME=${CROWDQ_DB_NAME}
+      - CROWDQ_DB_USER=${CROWDQ_DB_USER}
+      - CROWDQ_DB_PASSWORD=${CROWDQ_DB_PASSWORD}
+    depends_on:
+      - crowdq-postgres
 
 volumes:
   crowdq_postgres_data:
