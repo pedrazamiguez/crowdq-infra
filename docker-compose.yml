@@ -177,7 +177,7 @@ services:
     build:
       context: ../crowdq-api-gateway
       dockerfile: Dockerfile
-    image: crowdq-api-gateway:0.0.1-SNAPSHOT
+    image: crowdq/api-gateway:0.0.1-SNAPSHOT
     container_name: api-gateway
     ports:
       - "${API_GATEWAY_PORT}:8080"
@@ -195,7 +195,7 @@ services:
     build:
       context: ../crowdq-user-service/crowdq-user-service
       dockerfile: Dockerfile
-    image: crowdq-user-service:0.0.1-SNAPSHOT
+    image: crowdq/user-service:0.0.1-SNAPSHOT
     container_name: user-service
     networks:
       - backend

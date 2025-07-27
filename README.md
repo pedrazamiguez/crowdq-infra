@@ -46,23 +46,25 @@ All configuration values like ports and credentials are extracted to the `.env` 
 Example:
 
 ```env
-# Zookeeper
+# Zookeper
 ZK_HOST=zookeeper
 ZK_PORT=2181
 
 # Kafka
 KAFKA_BROKER=kafka:9092
 KAFKA_PORT=9092
+
+# Kafka UI - Redpanda
 KAFKA_UI_PORT=8088
 
-# PostgreSQL (CrowdQ)
+# CrowdQ Postgres Database
 CROWDQ_DB_HOST=postgres
 CROWDQ_DB_PORT=5432
 CROWDQ_DB_NAME=crowdq
 CROWDQ_DB_USER=crowdq
 CROWDQ_DB_PASSWORD=crowdq
 
-# PgAdmin
+# Postgres Database UI - PgAdmin
 PGADMIN_PORT=5050
 PGADMIN_EMAIL=admin@crowdq.dev
 PGADMIN_PASSWORD=admin
@@ -70,6 +72,8 @@ PGADMIN_PASSWORD=admin
 # Redis
 REDIS_HOST=redis
 REDIS_PORT=6379
+
+# Redis UI - RedisInsight
 REDISINSIGHT_PORT=5540
 
 # Prometheus
@@ -78,25 +82,32 @@ PROMETHEUS_PORT=9090
 # Grafana
 GRAFANA_PORT=3000
 
-# SonarQube
-SONARQUBE_HOST=sonarqube
-SONARQUBE_PORT=9000
+# SonarQube Postgres Database
 SONARQUBE_DB_HOST=sonar-postgres
 SONARQUBE_DB_PORT=5432
 SONARQUBE_DB_NAME=sonarqube
 SONARQUBE_DB_USER=sonar
 SONARQUBE_DB_PASSWORD=sonar
 
-# Keycloak
-KEYCLOAK_HOST=keycloak
-KEYCLOAK_PORT=59000
+# SonarQube
+SONARQUBE_HOST=sonarqube
+SONARQUBE_PORT=9000
+
+# Keycloak Postgres Database
 KEYCLOAK_DB_HOST=keycloak-postgres
 KEYCLOAK_DB_PORT=5432
 KEYCLOAK_DB_NAME=keycloak
 KEYCLOAK_DB_USER=keycloak
 KEYCLOAK_DB_PASSWORD=keycloak
+
+# Auth Service - Keycloak
+KEYCLOAK_HOST=keycloak
+KEYCLOAK_PORT=59000
 KEYCLOAK_ADMIN_USER=admin
 KEYCLOAK_ADMIN_PASSWORD=admin
+
+# API Gateway
+API_GATEWAY_PORT=8080
 ```
 
 ## 🔐 Keycloak Setup with TLS
@@ -110,8 +121,8 @@ openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 \
   -nodes \
   -keyout server.key.pem \
   -out server.crt.pem \
-  -subj "/CN=localhost" \
-  -addext "subjectAltName=DNS:localhost"
+  -subj "/CN=auth-service" \
+  -addext "subjectAltName=DNS:auth-service,DNS:localhost,DNS:api-gateway,DNS:user-service,DNS:event-service,DNS:question-service,DNS:moderation-service,DNS:analytics-service,DNS:notification-service"
 
 chmod 755 server.key.pem
 ```
@@ -137,6 +148,14 @@ sudo keytool -delete \
   -keystore $JAVA_HOME/lib/security/cacerts \
   -storepass changeit \
   -noprompt 
+```
+
+**Generate the Java base Docker image to Dockerize microservices**
+
+This docker image will trust the self-signed certificate among containers
+
+```bash
+docker build -t crowdq/java-base:1.0.0 .
 ```
 
 ## 🐘 PostgreSQL
