@@ -1,6 +1,6 @@
 # CrowdQ Infrastructure Setup
 
-This repository contains the Docker-based infrastructure stack for the **CrowdQ** microservices showcase project. It provides databases, message brokers, observability tools, authentication, caching, and developer utilities to support local development and testing.
+This repository contains the Docker-based infrastructure stack for the **CrowdQ** microservices showcase project. It provides databases, message brokers, observability tools, caching, and developer utilities to support local development and testing.
 
 ## 🗂️ Folder Structure
 
@@ -11,9 +11,6 @@ crowdq-infra/
 ├── .env.example              # Example env file – copy or rename to .env and update values as needed
 ├── prometheus/
 │   └── prometheus.yml        # Prometheus configuration
-├── keycloak/
-│   ├── server.crt.pem        # TLS certificate for Keycloak
-│   └── server.key.pem        # TLS key for Keycloak
 ├── grafana/                  # Optional Grafana provisioning
 ├── kafka/                    # Optional Kafka config
 ├── postgres/                 # Optional PostgreSQL config
@@ -36,8 +33,6 @@ crowdq-infra/
 | **Grafana**          | 3000  | Dashboard and visualizations                    |
 | **SonarQube**        | 9000  | Static code analysis                            |
 | **Sonar DB**         | 5433  | PostgreSQL DB dedicated to SonarQube            |
-| **Keycloak**         | 59000 | Authentication service                          |
-| **Keycloak DB**      | 5434  | PostgreSQL DB for Keycloak                      |
 
 ## ⚙️ Environment Variables (.env)
 
@@ -93,69 +88,8 @@ SONARQUBE_DB_PASSWORD=sonar
 SONARQUBE_HOST=sonarqube
 SONARQUBE_PORT=9000
 
-# Keycloak Postgres Database
-KEYCLOAK_DB_HOST=keycloak-postgres
-KEYCLOAK_DB_PORT=5432
-KEYCLOAK_DB_NAME=keycloak
-KEYCLOAK_DB_USER=keycloak
-KEYCLOAK_DB_PASSWORD=keycloak
-
-# Auth Service - Keycloak
-KEYCLOAK_HOST=keycloak
-KEYCLOAK_PORT=59000
-KEYCLOAK_ADMIN_USER=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
-
 # API Gateway
 API_GATEWAY_PORT=8080
-```
-
-## 🔐 Keycloak Setup with TLS
-
-Keycloak is exposed securely over HTTPS using self-signed certificates located at `keycloak/server.crt.pem` and `keycloak/server.key.pem`.
-
-To generate new certificates:
-
-```bash
-openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 \
-  -nodes \
-  -keyout server.key.pem \
-  -out server.crt.pem \
-  -subj "/CN=auth-service" \
-  -addext "subjectAltName=DNS:auth-service,DNS:localhost,DNS:api-gateway,DNS:user-service,DNS:event-service,DNS:question-service,DNS:moderation-service,DNS:analytics-service,DNS:notification-service"
-
-chmod 755 server.key.pem
-```
-
-To trust the certificate on the Java KeyStore:
-
-```bash
-sudo keytool -importcert \
-  -file keycloak/server.crt.pem \
-  -alias keycloak \
-  -keystore $JAVA_HOME/lib/security/cacerts \
-  -storepass changeit \
-  -noprompt
-```
-
-**Important**: A system restart may be required for the certificate changes to take full effect.
-
-**Note**: If needed, you can remove the certificate from the Java KeyStore using:
-
-```bash
-sudo keytool -delete \
-  -alias keycloak \
-  -keystore $JAVA_HOME/lib/security/cacerts \
-  -storepass changeit \
-  -noprompt 
-```
-
-**Generate the Java base Docker image to Dockerize microservices**
-
-This docker image will trust the self-signed certificate among containers
-
-```bash
-docker build -t crowdq/java-base:1.0.0 .
 ```
 
 ## 🐘 PostgreSQL
@@ -190,11 +124,6 @@ Set Prometheus as a data source in Grafana after first login.
 - Default login: `admin` / `admin`
 - Uses its own PostgreSQL DB (`sonar-postgres`)
 
-## 🔐 Authentication
-
-- Keycloak: [https://localhost:59000](https://localhost:59000)
-- Runs with HTTPS using provided certificate and PostgreSQL backend
-
 ## 🚀 Usage
 
 1. Copy `.env.example` to `.env` and adjust values as needed.
@@ -212,9 +141,6 @@ docker compose up -d
 - Prometheus: http://localhost:9090  
 - Grafana: http://localhost:3000  
 - SonarQube: http://localhost:9000  
-- Keycloak: https://localhost:59000  
-
-> 🛑 On first access to Keycloak, your browser may warn about the self-signed certificate.
 
 ## 🧼 Cleanup
 
@@ -230,7 +156,6 @@ If you want to keep your data, avoid using the `-v` option when stopping the con
 |-------------------------|-------------------------------|
 | `crowdq_postgres_data`  | App PostgreSQL persistence    |
 | `sonar_postgres_data`   | SonarQube DB data             |
-| `keycloak_postgres_data`| Keycloak DB data              |
 | `sonarqube_data`        | SonarQube data                |
 | `sonarqube_logs`        | SonarQube logs                |
 | `sonarqube_extensions`  | SonarQube plugins             |
